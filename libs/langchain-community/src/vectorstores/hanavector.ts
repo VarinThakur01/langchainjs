@@ -1053,7 +1053,6 @@ export class HanaDB extends VectorStore {
    * @param filter - Optional. A filter object to specify which entries to delete.
    * @throws Error if 'ids' parameter is provided, as deletion by ids is not supported.
    * @throws Error if 'filter' parameter is not provided, as it is required for deletion.
-   * to do: adjust the call signature
    */
   async delete(options: { ids?: string[]; filter?: Filter }): Promise<void> {
     const { ids, filter } = options;
