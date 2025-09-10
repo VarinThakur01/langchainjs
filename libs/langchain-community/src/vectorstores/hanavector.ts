@@ -482,6 +482,27 @@ export class HanaDB extends VectorStore {
       await this.validateInternalEmbeddingFunction();
 
     await this.initializeTable();
+  }
+
+  private async initializeTable() {
+    const tableExists = await this.tableExists(this.tableName);
+    if (!tableExists) {
+      let sqlStr =
+        `CREATE TABLE "${this.tableName}" (` +
+        `"${this.contentColumn}" NCLOB, ` +
+        `"${this.metadataColumn}" NCLOB, ` +
+        `"${this.vectorColumn}" ${this.vectorColumnType}`;
+      // Length can either be -1 (QRC01+02-24) or 0 (QRC03-24 onwards)
+      if (this.vectorColumnLength === -1 || this.vectorColumnLength === 0) {
+        sqlStr += ");";
+      } else {
+        sqlStr += `(${this.vectorColumnLength}));`;
+      }
+
+      const client = this.connection;
+      await executeQuery(client, sqlStr);
+    }
+
     await this.checkColumn(this.tableName, this.contentColumn, [
       "NCLOB",
       "NVARCHAR",
@@ -493,28 +514,12 @@ export class HanaDB extends VectorStore {
     await this.checkColumn(
       this.tableName,
       this.vectorColumn,
-      ["REAL_VECTOR"],
+      [this.vectorColumnType],
       this.vectorColumnLength
     );
-  }
 
-  private async initializeTable() {
-    const tableExists = await this.tableExists(this.tableName);
-    if (!tableExists) {
-      let sqlStr =
-        `CREATE TABLE "${this.tableName}" (` +
-        `"${this.contentColumn}" NCLOB, ` +
-        `"${this.metadataColumn}" NCLOB, ` +
-        `"${this.vectorColumn}" REAL_VECTOR`;
-      // Length can either be -1 (QRC01+02-24) or 0 (QRC03-24 onwards)
-      if (this.vectorColumnLength === -1 || this.vectorColumnLength === 0) {
-        sqlStr += ");";
-      } else {
-        sqlStr += `(${this.vectorColumnLength}));`;
-      }
-
-      const client = this.connection;
-      await executeQuery(client, sqlStr);
+    for (const columnName of this.specificMetadataColumns) {
+      await this.checkColumn(this.tableName, columnName);
     }
   }
 
@@ -541,7 +546,7 @@ export class HanaDB extends VectorStore {
   public async checkColumn(
     tableName: string,
     columnName: string,
-    columnType: string | string[],
+    columnType?: string | string[],
     columnLength?: number
   ): Promise<void> {
     const sqlStr = `
@@ -562,11 +567,15 @@ export class HanaDB extends VectorStore {
       const length: number = resultSet[0].LENGTH;
 
       // Check if dataType is within columnType
-      const isValidType = Array.isArray(columnType)
-        ? columnType.includes(dataType)
-        : columnType === dataType;
-      if (!isValidType) {
-        throw new Error(`Column ${columnName} has the wrong type: ${dataType}`);
+      if (columnType) {
+        const isValidType = Array.isArray(columnType)
+          ? columnType.includes(dataType)
+          : columnType === dataType;
+        if (!isValidType) {
+          throw new Error(
+            `Column ${columnName} has the wrong type: ${dataType}`
+          );
+        }
       }
 
       // Length can either be -1 (QRC01+02-24) or 0 (QRC03-24 onwards)
@@ -669,7 +678,7 @@ export class HanaDB extends VectorStore {
         "SELECT CLOUD_VERSION FROM SYS.M_DATABASE;"
       );
       const rows = await client.executeStatement(stm);
-      return rows[0];
+      return rows[0]?.CLOUD_VERSION;
     } catch (err) {
       return undefined;
     }
