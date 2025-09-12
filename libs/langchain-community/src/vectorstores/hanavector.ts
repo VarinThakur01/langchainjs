@@ -37,8 +37,39 @@ const defaultVectorColumnLength = -1; // -1 means dynamic length
 const defaultVectorColumnType = "REAL_VECTOR";
 
 /**
- * Interface defining the arguments required to create an instance of
- * `HanaDB`.
+ * Configuration options used to initialize a HanaDB instance for vector-based similarity search.
+ * 
+ * @property connection               [required] An active SAP HANA database connection object.
+ *                                    This should be a client or pool object compatible with the SAP HANA database driver.
+ * 
+ * @property distanceStrategy         [optional] The distance metric used for similarity search.
+ *                                    Allowed Values: "COSINE" or "EUCLIDEAN".
+ *                                    @default "COSINE"
+ * 
+ * @property tableName                [optional] Name of the table in the database that stores vector embeddings.
+ *                                    @default "EMBEDDINGS"
+ * 
+ * @property contentColumn            [optional] Name of the column that stores the main text or content.
+ *                                    @default "VEC_TEXT"
+ * 
+ * @property metadataColumn           [optional] Name of the column that stores metadata as a JSON string or object.
+ *                                    @default "VEC_META"
+ * 
+ * @property vectorColumn             [optional] Name of the column that stores the embedding vector.
+ *                                    @default "VEC_VECTOR"
+ * 
+ * @property vectorColumnLength       [optional] Specifies the length (dimensionality) of the vector column.
+ *                                    If set to -1, the length is considered dynamic (i.e., not fixed).
+ *                                    @default -1
+ * 
+ * @property vectorColumnType         [optional] The datatype of the vector column in the database.
+ *                                    Typical values: "REAL_VECTOR" (32-bit floats), "HALF_VECTOR" (16-bit floats).
+ *                                    @default "REAL_VECTOR"
+ * 
+ * @property specificMetadataColumns  [optional] An array of specific metadata column names to be extracted individually,
+ *                                    instead of parsing from a single JSON metadata column.
+ *                                    Useful when querying/filtering on individual metadata fields.
+ *                                    @default undefined
  */
 export interface HanaDBArgs {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
