@@ -37,7 +37,7 @@ const defaultVectorColumnLength = -1; // -1 means dynamic length
 const defaultVectorColumnType = "REAL_VECTOR";
 
 /**
- * Configuration options used to initialize a HanaDB instance for vector-based similarity search.
+ * Configuration options used to initialize a HanaDB instance.
  * 
  * @property connection               [required] An active SAP HANA database connection object.
  *                                    This should be a client or pool object compatible with the SAP HANA database driver.
