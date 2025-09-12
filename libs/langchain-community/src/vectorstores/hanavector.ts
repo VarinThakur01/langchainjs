@@ -745,7 +745,7 @@ export class HanaDB extends VectorStore {
    */
   private convertToTargetVectorType(expr: string): string {
     if (VECTOR_COLUMN_SQL_TYPES.includes(this.vectorColumnType)) {
-      return `TO_${this.vectorColumnType}('${expr}')`;
+      return `TO_${this.vectorColumnType}(${expr})`;
     }
     throw new Error(`Unsupported vector type: ${this.vectorColumnType}`);
   }
@@ -1157,7 +1157,7 @@ export class HanaDB extends VectorStore {
   ): Promise<Array<[Document, number, number[]]>> {
     // Convert the embedding vector to a string for SQL query
     const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
-    const embeddingString = `[${sanitizedEmbedding.join(", ")}]`;
+    const embeddingString = `'[${sanitizedEmbedding.join(", ")}]'`;
     const embeddingExpr = this.convertToTargetVectorType(embeddingString);
     return this.similaritySearchWithScoreAndVector(embeddingExpr, k, filter);
   }
